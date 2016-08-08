@@ -12,6 +12,7 @@ class git::params {
 
   case $::osfamily {
     'Debian': {
+      notice('hit debian block')
       if $::operatingsystem == 'Ubuntu' and versioncmp($::operatingsystemrelease, '11') < 0 {
         $package = 'git-core'
       }else{
@@ -28,7 +29,7 @@ class git::params {
       $grep_cmd = '/usr/bin/grep'
     }
     default:{
-      fail("The NeSI Git Puppet module does not support ${::osfamily} family of operating systems")
+      notice("The NeSI Git Puppet module does not support ${::osfamily} family of operating systems")
     }
   }
 }
