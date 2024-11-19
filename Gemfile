@@ -1,17 +1,32 @@
-source 'https://rubygems.org'
+# Managed by modulesync - DO NOT EDIT
+# https://voxpupuli.org/docs/updating-files-managed-with-modulesync/
 
-group :development, :test do
-  gem 'rake',                   :require => false
-  gem "rspec-puppet", :git => 'https://github.com/rodjek/rspec-puppet.git', :require => false
-  gem 'puppetlabs_spec_helper', :require => false
-  gem 'puppet-lint',            :require => false
-  gem 'puppet-syntax',          :require => false
+source ENV['GEM_SOURCE'] || 'https://rubygems.org'
+
+group :test do
+  gem 'voxpupuli-test', '~> 7.0',   :require => false
+  gem 'coveralls',                  :require => false
+  gem 'simplecov-console',          :require => false
+  gem 'puppet_metadata', '~> 4.0',  :require => false
 end
 
-if puppetversion = ENV['PUPPET_GEM_VERSION']
-  gem 'puppet', puppetversion,  :require => false
-else
-  gem 'puppet',                 :require => false
+group :development do
+  gem 'guard-rake',               :require => false
+  gem 'overcommit', '>= 0.39.1',  :require => false
 end
 
-# vim:ft=ruby
+group :system_tests do
+  gem 'voxpupuli-acceptance', '~> 3.0',  :require => false
+end
+
+group :release do
+  gem 'voxpupuli-release', '~> 3.0',  :require => false
+end
+
+gem 'rake', :require => false
+gem 'facter', ENV['FACTER_GEM_VERSION'], :require => false, :groups => [:test]
+
+puppetversion = ENV['PUPPET_GEM_VERSION'] || [">= 7.24", "< 9"]
+gem 'puppet', puppetversion, :require => false, :groups => [:test]
+
+# vim: syntax=ruby
