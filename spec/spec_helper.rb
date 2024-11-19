@@ -1,28 +1,24 @@
-require 'puppetlabs_spec_helper/module_spec_helper'
+# frozen_string_literal: true
+
+# Managed by modulesync - DO NOT EDIT
+# https://voxpupuli.org/docs/updating-files-managed-with-modulesync/
+
+# puppetlabs_spec_helper will set up coverage if the env variable is set.
+# We want to do this if lib exists and it hasn't been explicitly set.
+ENV['COVERAGE'] ||= 'yes' if Dir.exist?(File.expand_path('../lib', __dir__))
+
+require 'voxpupuli/test/spec_helper'
 
 RSpec.configure do |c|
-  c.treat_symbols_as_metadata_keys_with_true_values = true
+  c.facterdb_string_keys = false
+end
 
-  c.before :each do
-    # Ensure that we don't accidentally cache facts and environment
-    # between test cases.
-    Facter::Util::Loader.any_instance.stubs(:load_all)
-    Facter.clear
-    Facter.clear_messages
+add_mocked_facts!
 
-    # Store any environment variables away to be restored later
-    @old_env = {}
-    ENV.each_key {|k| @old_env[k] = ENV[k]}
-
-    # avoid "Only root can execute commands as other users"
-    Puppet.features.stubs(:root? => true)
-
-    if ENV['STRICT_VARIABLES'] == 'yes'
-      Puppet.settings[:strict_variables]=true
-    end
+if File.exist?(File.join(__dir__, 'default_module_facts.yml'))
+  facts = YAML.safe_load(File.read(File.join(__dir__, 'default_module_facts.yml')))
+  facts&.each do |name, value|
+    add_custom_fact name.to_sym, value
   end
 end
-
-shared_examples :compile, :compile => true do
-  it { should compile.with_all_deps }
-end
+Dir['./spec/support/spec/**/*.rb'].sort.each { |f| require f }

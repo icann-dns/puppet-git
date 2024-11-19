@@ -1,55 +1,44 @@
-require 'puppetlabs_spec_helper/rake_tasks'
-require 'puppet-lint/tasks/puppet-lint'
-require 'puppet-syntax/tasks/puppet-syntax'
+# Managed by modulesync - DO NOT EDIT
+# https://voxpupuli.org/docs/updating-files-managed-with-modulesync/
 
-exclude_paths = [
-  'spec/**/*',
-  'pkg/**/*',
-  'tests/**/*'
-]
-
-PuppetSyntax.exclude_paths = exclude_paths
-
-Rake::Task[:lint].clear
-PuppetLint::RakeTask.new :lint do |config|
-  # Pattern of files to ignore
-  config.ignore_paths = exclude_paths
-
-  # List of checks to disable
-  config.disable_checks = [
-    '80chars',
-    'class_parameter_defaults',
-    'class_inherits_from_params_class',
-    'autoloader_layout'
-  ]
-
-  # Should the task fail if there were any warnings, defaults to false
-  config.fail_on_warnings = true
-
-  # Print out the context for the problem, defaults to false
-  config.with_context = true
-
-  # Format string for puppet-lint's output (see the puppet-lint help output
-  # for details
-  config.log_format = "%{path}:%{linenumber}:%{check}:%{KIND}:%{message}"
-
-  # Compare module layout relative to the module root
-  # config.relative = true
-end
-
-desc 'Check for ruby syntax errors.'
-task :validate_ruby_syntax do
-  ruby_parse_command = 'ruby -c'
-  Dir['spec/**/*.rb'].each do |path|
-   sh "#{ruby_parse_command} #{path}"
+# Attempt to load voxpupuli-test (which pulls in puppetlabs_spec_helper),
+# otherwise attempt to load it directly.
+begin
+  require 'voxpupuli/test/rake'
+rescue LoadError
+  begin
+    require 'puppetlabs_spec_helper/rake_tasks'
+  rescue LoadError
   end
 end
 
-desc 'Check for evil line endings.'
-task :check_line_endings do
-  Dir['spec/**/*.rb', 'tests/**/*.rb', 'manifests/**/*.pp'].each do |path|
-   sh "file #{path}|grep -v CRLF"
+# load optional tasks for acceptance
+# only available if gem group releases is installed
+begin
+  require 'voxpupuli/acceptance/rake'
+rescue LoadError
+end
+
+# load optional tasks for releases
+# only available if gem group releases is installed
+begin
+  require 'voxpupuli/release/rake_tasks'
+rescue LoadError
+  # voxpupuli-release not present
+else
+  GCGConfig.user = 'icann-dns'
+  GCGConfig.project = 'puppet-git'
+end
+
+desc "Run main 'test' task and report merged results to coveralls"
+task test_with_coveralls: [:test] do
+  if Dir.exist?(File.expand_path('../lib', __FILE__))
+    require 'coveralls/rake/task'
+    Coveralls::RakeTask.new
+    Rake::Task['coveralls:push'].invoke
+  else
+    puts 'Skipping reporting to coveralls.  Module has no lib dir'
   end
 end
 
-# vim:ft=ruby
+# vim: syntax=ruby
